@@ -22,19 +22,40 @@ function validate(line) {
     }
   }
 
-  for (const c of pass) {
-    if (c === char) {
-      count++;
+  // console.log({ from, to, char, pass });
+
+  let pos1valid = false;
+  let pos2valid = false;
+
+  for (let i = 0, len = pass.length; i < len; i++) {
+    if (i + 1 === from && pass.charAt(i) === char) {
+      pos1valid = true;
+    }
+
+    if (i + 1 === to && pass.charAt(i) === char) {
+      pos2valid = true;
     }
   }
 
-  // console.log({ from, to, char, pass });
-
-  if (count >= from && count <= to) {
-    return true;
+  if (pos1valid && pos2valid) {
+    return false;
   }
 
-  return false;
+  return pos1valid || pos2valid;
+
+  // first part
+
+  // for (const c of pass) {
+  //   if (c === char) {
+  //     count++;
+  //   }
+  // }
+
+  // if (count >= from && count <= to) {
+  //   return true;
+  // }
+
+  // return false;
 }
 
 for await (const line of rl) {
@@ -42,6 +63,8 @@ for await (const line of rl) {
     i++;
   }
 }
-
-// console.log(validate('10-300 a: abcde'));
 console.log('total is: ', i);
+
+// console.log(validate('10-300 a: abcde')); // true
+// console.log(validate('1-3 a: abcde')); // true
+// console.log(validate('1-2 c: abcde')); // false
