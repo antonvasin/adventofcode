@@ -52,12 +52,30 @@ function hasColor(outer, inner) {
   return seen.get(outer);
 }
 
-let shinyGold = 'shiny gold';
-let count = 0;
-for (const [color] of rules) {
-  if (hasColor(color, shinyGold)) {
-    count++;
+const SHINY_GOLD = 'shiny gold';
+
+function countOuter(color) {
+  let countOuter = 0;
+  for (const [clr] of rules) {
+    if (hasColor(clr, color)) {
+      countOuter++;
+    }
   }
+  return countOuter;
 }
 
-console.log(count);
+function countBags(color) {
+  let countInner = 0;
+
+  if (rules.get(color) === undefined) {
+    return 0;
+  }
+
+  for (let [clr, count] of rules.get(color)) {
+    countInner += count + count * countBags(clr);
+  }
+
+  return countInner;
+}
+
+console.log({ countOuter: countOuter(SHINY_GOLD), countInner: countBags(SHINY_GOLD) });
