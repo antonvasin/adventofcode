@@ -1,51 +1,70 @@
 import { promises as fs } from 'fs';
 
-let input = (await fs.readFile(process.argv[2], 'utf8')).split('\n').map((s) => {
-  let [ins, arg] = s.split(' ');
-  return [ins, Number(arg)] as [string, number];
-});
+let input = (await fs.readFile(process.argv[2], 'utf8')).split('\n');
 
-type Opcode = (vm: VM) => void;
+type Instruction = (vm: VM) => void;
 
 type VM = {
-  program: [string, number][];
+  program: Instruction[];
   accumulator: number;
   executed: Record<number, boolean>;
   programCounter: number;
 };
 
-type Program = [string, number][];
+function cycle(vm: VM) {
+  let curCounter = vm.programCounter;
 
-let accumulator = 0;
-let seen = new Set();
-
-function run(i: number, program: Program) {
-  let [code, operand] = program[i];
-
-  if (seen.has(i)) {
-    console.log({ accumulator });
-    throw Error('Infinite loop detected!');
-  } else {
-    seen.add(i);
+  if (vm.executed[curCounter]) {
+    return false;
   }
 
-  // console.log({ ins, arg });
+  vm.executed[curCounter] = true;
+  vm.programCounter++;
 
-  switch (code) {
-    case 'nop':
-      return i + 1;
-    case 'acc':
-      accumulator += operand;
-      return i + 1;
-    case 'jmp':
-      return i + operand;
-    default:
-      throw Error(`Unknown instruction '${code}'`);
+  if (vm.programCounter === vm.program.length) {
+    return false;
   }
+
+  vm.program[curCounter](vm);
+
+  return true;
 }
 
-let i = 0;
+function parseInstr(instrs: string[]): VM {
+  let vm: VM = {
+    program: [],
+    accumulator: 0,
+    programCounter: 0,
+    executed: {},
+  };
 
-while (i !== input.length) {
-  i = run(i, input);
+  for (let line of instrs) {
+    let parts = line.split(' ');
+    let code = parts[0];
+    let operand = Number(parts[1]);
+
+    switch (code) {
+      case 'nop':
+        vm.program.push((vm) => {});
+        break;
+      case 'acc':
+        vm.program.push((vm) => {
+          vm.accumulator += operand;
+        });
+        break;
+      case 'jmp':
+        vm.program.push((vm) => {
+          vm.programCounter += operand - 1;
+        });
+        break;
+
+      default:
+        throw Error(`Unknown instruction '${code}'`);
+    }
+  }
+  return vm;
 }
+
+let vm = parseInstr(input);
+while (cycle(vm)) {}
+console.log(vm.accumulator);
