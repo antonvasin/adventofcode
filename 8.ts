@@ -2,13 +2,24 @@ import { promises as fs } from 'fs';
 
 let input = (await fs.readFile(process.argv[2], 'utf8')).split('\n').map((s) => {
   let [ins, arg] = s.split(' ');
-  return [ins, Number(arg)];
+  return [ins, Number(arg)] as [string, number];
 });
+
+type Opcode = (vm: VM) => void;
+
+type VM = {
+  program: [string, number][];
+  accumulator: number;
+  executed: Record<number, boolean>;
+  programCounter: number;
+};
+
+type Program = [string, number][];
 
 let accumulator = 0;
 let seen = new Set();
 
-function run(i, program) {
+function run(i: number, program: Program) {
   let [code, operand] = program[i];
 
   if (seen.has(i)) {
