@@ -11,23 +11,26 @@ type VM = {
   programCounter: number;
 };
 
-function cycle(vm: VM) {
+function cycle(vm: VM): 0 | 1 | 2 {
   let curCounter = vm.programCounter;
 
   if (vm.executed[curCounter]) {
-    return false;
+    // loop
+    return 2;
   }
 
   vm.executed[curCounter] = true;
   vm.programCounter++;
 
   if (vm.programCounter === vm.program.length) {
-    return false;
+    // ended
+    return 1;
   }
 
   vm.program[curCounter](vm);
 
-  return true;
+  // continue
+  return 0;
 }
 
 function parseInstr(instrs: string[]): VM {
@@ -62,9 +65,48 @@ function parseInstr(instrs: string[]): VM {
         throw Error(`Unknown instruction '${code}'`);
     }
   }
+
   return vm;
 }
 
 let vm = parseInstr(input);
-while (cycle(vm)) {}
+while (cycle(vm) === 0) {}
+
 console.log(vm.accumulator);
+
+outer: for (let [i, line] of input.entries()) {
+  let parts = line.split(' ');
+  let code = parts[0];
+  let operand = Number(parts[1]);
+
+  let replacement: string;
+
+  switch (code) {
+    case 'jmp':
+      replacement = `nop ${operand}`;
+      break;
+    case 'nop':
+      replacement = `jmp ${operand}`;
+      break;
+    default:
+  }
+
+  if (replacement) {
+    vm = parseInstr([...input.slice(0, i), replacement, ...input.slice(i + 1)]);
+
+    let run = true;
+
+    loop: while (run) {
+      let result = cycle(vm);
+      switch (result) {
+        case 0:
+          break;
+        case 1:
+          console.log({ i, replacement, acc: vm.accumulator }, 'fixed');
+          break outer;
+        case 2:
+          break loop;
+      }
+    }
+  }
+}
