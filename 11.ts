@@ -1,59 +1,48 @@
 import { promises as fs } from 'fs';
 
-let input = (await fs.readFile(process.argv[2], 'utf8')).split('\n');
+let args = process.argv.slice(2);
+let input = (await fs.readFile(args[0], 'utf8')).split('\n');
+let part2 = args[1] === 'true';
 
 type World = string[][];
 
-function tick(world: World): World {
-  let next: World = [...world.map((r) => [...r])];
+let maxNeighbours = part2 ? 5 : 4;
 
-  for (let [i, line] of world.entries()) {
-    for (let j = 0; j < line.length; j++) {
-      let c = line[j];
-
-      switch (c) {
-        case 'L':
-          if (neighbours(world, i, j) === 0) {
-            next[i][j] = '#';
-          }
-          break;
-
-        case '#':
-          if (neighbours(world, i, j) >= 4) {
-            next[i][j] = 'L';
-          }
-          break;
-
-        default:
-      }
-    }
-  }
-
-  return next;
-}
-
-function neighbours(world: World, i: number, j: number) {
+function neighbours(world: Map<string, boolean>, k: string) {
   let count = 0;
+  let [r, c] = k.split(',').map(Number);
 
-  outer: for (let m = -1; m < 2; m++) {
-    for (let n = -1; n < 2; n++) {
-      if (m === 0 && n === 0) {
+  for (let rOffset = -1; rOffset <= 1; rOffset++) {
+    for (let cOffset = -1; cOffset <= 1; cOffset++) {
+      if (rOffset === 0 && cOffset === 0) {
         continue;
       }
 
-      let curI = i + m;
-      let curJ = j + n;
+      if (!part2) {
+        let curR = r + rOffset;
+        let curC = c + cOffset;
 
-      if (curI < 0 || curI >= world.length) {
-        continue;
-      }
+        if (curR < 0 || curC < 0 || curR >= world.size || curC >= 100) {
+          continue;
+        }
 
-      if (curJ < 0 || curJ >= world[curI].length) {
-        continue;
-      }
+        if (world.get(`${curR},${curC}`) === true) {
+          count++;
+        }
+      } else {
+        for (let i = 0; ; i++) {
+          let curR = r + rOffset * i;
+          let curC = c + cOffset * i;
 
-      if (world[curI][curJ] === '#') {
-        count++;
+          if (curR < 0 || curC < 0 || curR >= world.size || curC >= 100) {
+            break;
+          }
+
+          if (world.get(`${curR}${curC}`) === true) {
+            count++;
+            break;
+          }
+        }
       }
     }
   }
@@ -61,33 +50,51 @@ function neighbours(world: World, i: number, j: number) {
   return count;
 }
 
-function same(l: World, r: World) {
-  return l.every((s, i) => r[i].join('') === s.join(''));
-}
+let occupied: Map<string, boolean> = new Map();
 
-function print(world: World) {
-  // console.clear();
-  console.log(world.map((r) => r.join('')).join('\n') + '\n');
-}
+for (let [r, s] of input.entries()) {
+  for (let [c, v] of s.split('').entries()) {
+    switch (v) {
+      case 'L':
+        occupied.set(`${r},${c}`, false);
+        break;
+      case '#':
+        occupied.set(`${r},${c}`, true);
 
-let w: World = input.map((s) => s.split(''));
-
-let prev = w;
-let cur = w;
-let run = true;
-for (let i = 0; run; i++) {
-  prev = cur;
-  cur = tick(cur);
-  let areTheSame = same(prev, cur);
-
-  // console.log(`\n\n ${i}${areTheSame ? ' (same)' : ''}:\n`);
-  // print(cur);
-
-  if (areTheSame) {
-    run = false;
+        break;
+      default:
+    }
   }
 }
 
-let count = cur.reduce((acc, l) => (acc += l.filter((s) => s === '#').length), 0);
+for (;;) {
+  let changed = false;
+  let prev = new Map(occupied);
+
+  for (let [k, occ] of prev) {
+    if (occ) {
+      if (neighbours(prev, k) >= maxNeighbours) {
+        occupied.set(k, false);
+        changed = true;
+      }
+    } else {
+      if (neighbours(prev, k) === 0) {
+        occupied.set(k, true);
+        changed = true;
+      }
+    }
+  }
+
+  if (!changed) {
+    break;
+  }
+}
+
+let count = 0;
+for (let [k, v] of occupied) {
+  if (v) {
+    count++;
+  }
+}
 
 console.log({ count });
