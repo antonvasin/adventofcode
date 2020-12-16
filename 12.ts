@@ -4,52 +4,50 @@ let args = process.argv.slice(2);
 let input = (await fs.readFile(args[0], 'utf8')).split('\n');
 let part2 = args[1] === 'true';
 
-class Ship {
+type Ship = {
   angle: number;
   x: number;
   y: number;
+};
 
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.angle = 90;
+function rotate(ship: Ship, angle: number) {
+  let newAngle = ship.angle + angle;
+
+  if (newAngle < 0) {
+    newAngle += 360;
+  } else if (newAngle >= 360) {
+    newAngle -= 360;
   }
 
-  rotate(angle: number) {
-    this.angle += angle;
-    if (this.angle < 0) {
-      this.angle += 360;
-    } else if (this.angle >= 360) {
-      this.angle -= 360;
-    }
-  }
+  return { ...ship, angle: newAngle };
+}
 
-  forward(value: number) {
-    switch (this.angle) {
-      case 0:
-        this.y += value;
-        break;
-      case 90:
-        this.x += value;
-        break;
-      case 180:
-        this.y -= value;
-        break;
-      case 270:
-        this.x -= value;
-        break;
-      default:
-        console.error('non right angle');
-        break;
-    }
-  }
+function forward(ship: Ship, value: number) {
+  switch (ship.angle) {
+    case 0:
+      return { ...ship, y: ship.y + value };
+    case 90:
+      return { ...ship, x: ship.x + value };
+    case 180:
+      return { ...ship, y: ship.y - value };
+    case 270:
+      return { ...ship, x: ship.x - value };
 
-  distance() {
-    return Math.abs(this.x) + Math.abs(this.y);
+    default:
+      console.error('non right angle');
+      return ship;
   }
 }
 
-let ship = new Ship();
+function distance(ship: Ship) {
+  return Math.abs(ship.x) + Math.abs(ship.y);
+}
+
+let ship: Ship = {
+  x: 0,
+  y: 0,
+  angle: 90,
+};
 
 for (let l of input) {
   let dir = l.substring(0, 1);
@@ -73,16 +71,16 @@ for (let l of input) {
       break;
 
     case 'F':
-      ship.forward(value);
+      ship = forward(ship, value);
       break;
 
     case 'R':
-      ship.rotate(value);
+      ship = rotate(ship, value);
       break;
     case 'L':
-      ship.rotate(-value);
+      ship = rotate(ship, -value);
       break;
   }
 }
 
-console.log('end', ship.distance());
+console.log(distance(ship));
