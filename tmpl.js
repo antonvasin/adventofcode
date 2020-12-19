@@ -1,6 +1,8 @@
-import fs from 'fs';
+import { promises as fs } from 'fs';
 
-let input = (await fs.promises.readFile(process.argv[2], 'utf8')).split('\n');
+let args = process.argv.slice(2);
+let input = (await fs.readFile(args[0], 'utf8')).split('\n');
+let part2 = args[1] === 'true';
 
 for (const line of input) {
   // line
