@@ -1,8 +1,8 @@
-const testInput = [199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
+const testInputOne = [199, 200, 208, 210, 200, 207, 240, 269, 260, 263];
 
-const file = (await Deno.readTextFile('./1-input.txt')).split('\n').map(Number);
+const inputOne = (await Deno.readTextFile('./1-input.txt')).split('\n').map(Number);
 
-function partOne(input: number[] = testInput) {
+function onePartOne(input: number[] = testInputOne) {
   let prev = undefined;
   let countInc = 0;
 
@@ -18,7 +18,7 @@ function partOne(input: number[] = testInput) {
   console.log('Inc', countInc);
 }
 
-function partTwo(input: number[] = testInput) {
+function onePartTwo(input: number[] = testInputOne) {
   const threeMeasure = [];
 
   for (let i = 0; i < input.length; i++) {
@@ -30,16 +30,16 @@ function partTwo(input: number[] = testInput) {
     }
   }
 
-  partOne(threeMeasure);
+  onePartOne(threeMeasure);
 }
 
 switch (Number(Deno.args[0])) {
   case 2:
-    partTwo(file);
+    onePartTwo(inputOne);
     break;
 
   case 1:
   default:
-    partOne(file);
+    onePartOne(inputOne);
     break;
 }
