@@ -12,36 +12,33 @@ const testInput = [
   '11001',
   '00010',
   '01010',
-].map((s) => parseInt(s, 2));
+];
 
-function run(input: number[]) {
-  const length = Math.max(...input).toString(2).length;
-  console.log('length', length);
-
-  const count: number[] = Array(length).fill(0);
-
-  // for each number in input
-  for (let i = 0; i < input.length; i++) {
-    const num = input[i];
-
-    // count occurance of 0 and 1 in each bit position
-    // 5 bit positons: 01010
-    // for each positions chech wheter the bit is 1
-    for (let j = 0; j < length; j++) {
-      // get mask for each position by shifting left by j bits
-      const mask = 1 << j;
-
-      // if bit is 1 then increase counter
-      if (num & mask) {
-        count[length - 1 - j]++;
-      }
+function mostCommon(input: string[], n: number) {
+  let count = 0;
+  for (const num of input) {
+    if (num.charAt(n) === '1') {
+      count++;
     }
+  }
+
+  const half = input.length / 2;
+
+  return count > half ? '1' : count === half ? '1' : '0';
+}
+
+function run(input: string[]) {
+  const length = input[0].length;
+
+  const count: string[] = [];
+  for (let i = 0; i < length; i++) {
+    count[i] = mostCommon(input, i);
   }
 
   let gamma = '';
   let epsilon = '';
   for (const bit of count) {
-    if (bit > input.length / 2) {
+    if (bit === '1') {
       gamma += '1';
       epsilon += '0';
     } else {
@@ -53,6 +50,39 @@ function run(input: number[]) {
   return parseInt(gamma, 2) * parseInt(epsilon, 2);
 }
 
-const file = (await Deno.readTextFile('./3-input.txt')).split('\n').map((s) => parseInt(s, 2));
+function run2(input: string[]) {
+  const width = input[0].length;
 
-console.log(run(file));
+  let oxygen = '';
+  let result = [...input];
+  for (let i = 0; i < width; i++) {
+    const mcv = mostCommon(result, i);
+
+    result = result.filter((num) => num.charAt(i) === mcv);
+
+    if (result.length === 1) {
+      oxygen = result[0];
+      break;
+    }
+  }
+
+  result = [...input];
+  let oc2 = '';
+  for (let i = 0; i < width; i++) {
+    const lcv = mostCommon(result, i) === '1' ? '0' : '1';
+
+    result = result.filter((num) => num.charAt(i) === lcv);
+
+    if (result.length === 1) {
+      oc2 = result[0];
+      break;
+    }
+  }
+
+  return parseInt(oxygen, 2) * parseInt(oc2, 2);
+}
+
+const file = (await Deno.readTextFile('./3-input.txt')).split('\n');
+
+console.log(1, run(file));
+console.log(2, run2(file));
