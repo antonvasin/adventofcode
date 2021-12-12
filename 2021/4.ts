@@ -19,16 +19,32 @@ const testInput = `7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,
 22 11 13  6  5
  2  0 12  3  7`;
 
-type Boards = number[][][];
+type Board = number[][];
 
-function run(input: string) {
+function parse(input: string): [number[], Board[]] {
   const [head, ...rest] = input.split('\n\n');
-  const numbers = head.split(',').map(Number);
-  const boards: Boards = rest.map((s) =>
-    s.split('\n').map((s) => s.trim().split(/\s+/).map(Number)),
-  );
 
-  const marks: Boards = [];
+  const boards = rest.map((s) => s.split('\n').map((s) => s.trim().split(/\s+/).map(Number)));
+
+  const numbers = head.split(',').map(Number);
+
+  return [numbers, boards];
+}
+
+function mark(num: number, board: Board, marks: Board) {
+  board.forEach((line, l) => {
+    marks[l] ||= [];
+
+    const idx = line.findIndex((n) => n === num);
+
+    if (idx > -1) {
+      marks[l].push(idx);
+    }
+  });
+}
+
+function run(numbers: number[], boards: Board[]) {
+  const marks: Board[] = [];
   let winner: number | undefined = undefined;
   let winningNum: number | undefined = undefined;
 
@@ -38,44 +54,18 @@ function run(input: string) {
     }
 
     boards.forEach((board, b) => {
-      if (Number.isInteger(winner)) {
-        return;
-      }
-
       marks[b] ||= [];
 
-      board.forEach((line, l) => {
-        marks[b][l] ||= [];
-        if (Number.isInteger(winner)) {
-          return;
-        }
-
-        const idx = line.findIndex((n) => n === num);
-
-        if (idx > -1) {
-          marks[b][l].push(idx);
-
-          if (bingo(board, marks[b])) {
-            winner = b;
-            winningNum = num;
-            return;
-          }
-        }
-      });
+      mark(num, board, marks[b]);
+      if (bingo(board, marks[b])) {
+        winner = b;
+        winningNum = num;
+      }
     });
   }
 
   if (winner && winningNum) {
-    const board = boards[winner];
-
-    const sum = board.reduce(
-      (sum, line, l) =>
-        (sum += line
-          .filter((_, i) => !marks[winner!][l].includes(i))
-          .reduce((line, n) => (line += n), 0)),
-      0,
-    );
-
+    const sum = sumBoard(boards[winner], marks[winner]);
     console.log({ winner, winningNum }, boards[winner], marks[winner]);
 
     return sum * winningNum;
@@ -84,7 +74,7 @@ function run(input: string) {
   }
 }
 
-function bingo(board: number[][], marks: number[][]) {
+function bingo(board: Board, marks: Board): boolean {
   // rows
   for (let r = 0; r < board.length; r++) {
     if (!marks[r]) {
@@ -96,7 +86,7 @@ function bingo(board: number[][], marks: number[][]) {
   }
 
   // columns
-  for (let c = 0; c < 5; c++) {
+  for (let c = 0; c < board[0].length; c++) {
     if (marks.length !== board.length) {
       continue;
     }
@@ -109,5 +99,50 @@ function bingo(board: number[][], marks: number[][]) {
   return false;
 }
 
-// console.log(run(testInput));
-console.log(run(await Deno.readTextFile('./4-input.txt')));
+function sumBoard(board: Board, marks: Board) {
+  return board.reduce(
+    (sum, line, l) =>
+      (sum += line.filter((_, i) => !marks[l].includes(i)).reduce((line, n) => (line += n), 0)),
+    0,
+  );
+}
+
+function run2(numbers: number[], boards: Board[]) {
+  const marks: Board[] = [];
+  const winners: number[] = [];
+  let winningNum: number | undefined = undefined;
+
+  for (const num of numbers) {
+    boards.forEach((board, b) => {
+      marks[b] ||= [];
+
+      if (!winners.includes(b)) {
+        mark(num, board, marks[b]);
+
+        if (bingo(board, marks[b])) {
+          winners.push(b);
+          winningNum = num;
+        }
+      }
+    });
+  }
+
+  if (winningNum) {
+    const winner = winners.slice(-1)[0];
+    const sum = sumBoard(boards[winner], marks[winner]);
+    console.log({ winner, winningNum }, boards[winner], marks[winner]);
+
+    return sum * winningNum;
+  } else {
+    throw new Error('No winning board');
+  }
+}
+
+const input = await Deno.readTextFile('./4-input.txt');
+// const input = testInput;
+
+if (Deno.args[0] === '2') {
+  console.log(run2(...parse(input)));
+} else {
+  console.log(run(...parse(input)));
+}
