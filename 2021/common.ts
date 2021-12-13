@@ -1,20 +1,26 @@
-type Puzzle<T, O = string | number | boolean> = (input: T) => O;
+import { parse } from 'https://deno.land/std/flags/mod.ts';
+
+type Puzzle<T, O = string | number | boolean> = (input: T, ...args: any[]) => O;
 
 type Parser<T> = (input: string) => T;
 
 export async function runPuzzle<T>(
-  part1: Puzzle<T> = () => true,
-  part2: Puzzle<T> = () => true,
-  parse: Parser<T>,
+  puzzles: Puzzle<T>[] = [() => true],
+  parseInput: Parser<T>,
   inputFilename: string,
   testInput: string,
 ) {
-  const input = Deno.args[1] === 'test' ? testInput : await Deno.readTextFile(inputFilename);
-  const parsed = parse(input);
+  const args = parse(Deno.args, {
+    default: {
+      test: false,
+      part: 1,
+    },
+  });
 
-  if (Deno.args[0] !== '2') {
-    console.log(part1(parsed));
-  } else {
-    console.log(part2(parsed));
-  }
+  const input = args.test ? testInput : await Deno.readTextFile(inputFilename);
+  const parsed = parseInput(input);
+
+  const part = args.part - 1;
+  const puzzle = puzzles[part] || puzzles[0];
+  console.log(puzzle(parsed, ...args['_']));
 }

@@ -80,4 +80,4 @@ function run(input: Input) {
   return danger.length;
 }
 
-runPuzzle(run, undefined, parse, './5-input.txt', testInput);
+runPuzzle([run, () => true], parse, './5-input.txt', testInput);
