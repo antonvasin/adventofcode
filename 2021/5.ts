@@ -46,7 +46,7 @@ function mark(input: number[][][]) {
   return marks;
 }
 
-function drawMap(marks: Map<string, number>) {
+function _drawMap(marks: Map<string, number>) {
   let map = '';
   for (let y = 0; y < 1000; y++) {
     let line = '';
@@ -68,15 +68,16 @@ function drawMap(marks: Map<string, number>) {
   console.log(map);
 }
 
-function run(input: string) {
-  const parsedInput = parse(input);
-  const marks = mark(parsedInput);
+type Input = number[][][];
 
-  // drawMap(marks);
+function run(input: Input) {
+  const marks = mark(input);
+
+  // _drawMap(marks);
 
   const danger = Array.from(marks.entries()).filter(([_, v]) => v > 1);
 
   return danger.length;
 }
 
-runPuzzle(run, () => {}, './5-input.txt', testInput);
+runPuzzle(run, undefined, parse, './5-input.txt', testInput);
