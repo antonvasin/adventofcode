@@ -33,4 +33,4 @@ function run(input: Input, day = 1) {
   return result.length;
 }
 
-runPuzzle([run, () => true], parse, './6-input.txt', testInput);
+runPuzzle(run, parse, './6-input.txt', testInput);

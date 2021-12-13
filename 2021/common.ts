@@ -5,7 +5,7 @@ type Puzzle<T, O = string | number | boolean> = (input: T, ...args: any[]) => O;
 type Parser<T> = (input: string) => T;
 
 export async function runPuzzle<T>(
-  puzzles: Puzzle<T>[] = [() => true],
+  puzzles: Puzzle<T> | Puzzle<T>[] = () => true,
   parseInput: Parser<T>,
   inputFilename: string,
   testInput: string,
@@ -21,6 +21,6 @@ export async function runPuzzle<T>(
   const parsed = parseInput(input);
 
   const part = args.part - 1;
-  const puzzle = puzzles[part] || puzzles[0];
+  const puzzle = Array.isArray(puzzles) ? puzzles[part] || puzzles[0] : puzzles;
   console.log(puzzle(parsed, ...args['_']));
 }
