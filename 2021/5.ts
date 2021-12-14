@@ -1,5 +1,4 @@
-import clear from 'https://deno.land/x/clear/mod.ts';
-import { runPuzzle } from './common.ts';
+import { clear, MapDefault, runPuzzle } from "./common.ts";
 
 export {};
 const testInput = `0,9 -> 5,9
@@ -14,31 +13,34 @@ const testInput = `0,9 -> 5,9
 5,5 -> 8,2`;
 
 function parse(input: string) {
-  return input.split('\n').map((l) => l.split(' -> ').map((n) => n.split(',').map(Number)));
-}
-
-function count(marks: Map<string, number>, key: string) {
-  const prev = marks.get(key);
-  return marks.set(key, prev ? prev + 1 : 1);
+  return input.split("\n").map((l) =>
+    l.split(" -> ").map((n) => n.split(",").map(Number))
+  );
 }
 
 function mark(input: number[][][]) {
-  const marks = new Map<string, number>();
+  const marks = new MapDefault<string, number>(0);
 
-  for (const [from, to] of input) {
-    // vertical line, x1 == x2
-    if (from[0] === to[0]) {
-      const [fromY, toY] = [from[1], to[1]].sort();
-
-      for (let y = fromY; y <= toY; y++) {
-        count(marks, `${from[0]},${y}`);
+  for (const [[fromX, fromY], [toX, toY]] of input) {
+    if (fromX === toX) {
+      if (fromY < toY) {
+        for (let y = fromY; y <= toY; y++) {
+          marks.update(`${fromX},${y}`, (k) => k + 1);
+        }
+      } else {
+        for (let y = fromY; y >= toY; y--) {
+          marks.update(`${fromX},${y}`, (k) => k + 1);
+        }
       }
-      // horizontal line, y1 == y2
-    } else if (from[1] === to[1]) {
-      const [fromX, toX] = [from[0], to[0]].sort();
-
-      for (let x = fromX; x <= toX; x++) {
-        count(marks, `${x},${from[1]}`);
+    } else if (fromY === toY) {
+      if (fromX < toX) {
+        for (let x = fromX; x <= toX; x++) {
+          marks.update(`${x},${fromY}`, (k) => k + 1);
+        }
+      } else {
+        for (let x = fromX; x >= toX; x--) {
+          marks.update(`${x},${fromY}`, (k) => k + 1);
+        }
       }
     }
   }
@@ -47,24 +49,24 @@ function mark(input: number[][][]) {
 }
 
 function _drawMap(marks: Map<string, number>) {
-  let map = '';
-  for (let y = 0; y < 1000; y++) {
-    let line = '';
-    for (let x = 0; x < 1000; x++) {
+  let map = "";
+  for (let y = 0; y < 10; y++) {
+    let line = "";
+    for (let x = 0; x < 10; x++) {
       const key = `${x},${y}`;
 
       if (marks.has(key)) {
         line += marks.get(key);
       } else {
-        line += '.';
+        line += ".";
       }
     }
 
-    map += '\n';
+    map += "\n";
     map += line;
   }
 
-  clear();
+  clear(true);
   console.log(map);
 }
 
@@ -75,9 +77,9 @@ function run(input: Input) {
 
   // _drawMap(marks);
 
-  const danger = Array.from(marks.entries()).filter(([_, v]) => v > 1);
+  const danger = Array.from(marks.values()).filter((v) => v >= 2).length;
 
-  return danger.length;
+  return danger;
 }
 
-runPuzzle(run, parse, './5-input.txt', testInput);
+runPuzzle(run, parse, "./5-input.txt", testInput);
