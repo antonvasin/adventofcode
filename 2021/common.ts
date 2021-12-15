@@ -43,3 +43,9 @@ export function createMap<V, T extends DefaultValueMap<V>>(
 
   return new Proxy(initial, handler);
 }
+
+export function* range(from: number, to: number) {
+  for (let i = from; i <= to; i++) {
+    yield i;
+  }
+}
