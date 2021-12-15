@@ -20,11 +20,21 @@ function run(input: Input) {
   return `position ${cheapest[0]}, fuel ${cheapest[1]}`;
 }
 
-function fib(n: number): number {
-  return n === 0 ? 0 : n === 1 ? 1 : n + fib(n - 1);
-}
+const cache = createMap(0);
 
-console.log(fib(3));
+function fib(n: number): number {
+  if (n === 0 || n === 1) {
+    return n;
+  }
+
+  if (cache[n]) {
+    return cache[n];
+  }
+
+  const result = n + fib(n - 1);
+  cache[n] = result;
+  return result;
+}
 
 function run2(input: Input) {
   const sum = createMap(0);
